@@ -1,7 +1,7 @@
 """
-Simulation utilities for VarDP3 module (FAST).
+Simulation for VarDP3 module.
 - avoids rebuilding Mesh inside rollouts
-- optional progress printing
+- optional: progress printing
 """
 
 using MDPs: IntMDP
@@ -30,9 +30,12 @@ function sample_next(mdp::IntMDP, s::Int, a::Int, rng::AbstractRNG)
     return nxt.states[end], nxt.rewards[end]
 end
 
-# -----------------------------
-# Fast rollout (Mesh passed in)
-# -----------------------------
+# -------------------------------------------------------
+# Rollout (Mesh passed in).
+# A single trajectory simulator following τ-dependent 
+# greedy policy table π[t+1][s,k].
+# Returns discounted return ρ = ∑_{t=0}^{T-1} γ^t r_t.
+# -------------------------------------------------------
 function rollout_return(mdp::IntMDP, πtab::Vector{Matrix{Int}}, mesh::VarDP3.Mesh,
                         s0::Int, τ0::Float64, T::Int;
                         γ::Float64=0.9, side::Symbol=:plus,
@@ -60,9 +63,11 @@ function rollout_return(mdp::IntMDP, πtab::Vector{Matrix{Int}}, mesh::VarDP3.Me
     return ρ
 end
 
-# -----------------------------
+# --------------------------------------------------------------------
 # MC CDF curve 
-# -----------------------------
+# Empirical estimate of v^{π}(s0,τ) = P(ρ < τ), where π is τ-dependent
+# and initialized at τ0=τ. Returns vhat(τ) for each τ in τgrid (finite subset).
+# ----------------------------------------------------------------
 function mc_value_curve(mdp::IntMDP, πtab::Vector{Matrix{Int}}, Xgrid::Vector{Float64},
                         s0::Int, T::Int;
                         γ::Float64=0.9, side::Symbol=:plus,
@@ -95,9 +100,11 @@ function mc_value_curve(mdp::IntMDP, πtab::Vector{Matrix{Int}}, Xgrid::Vector{F
     return τgrid, v_mc
 end
 
-# -----------------------------
+# ------------------------------------------------------------------------------
 # MC VaR 
-# -----------------------------
+# Estimate the empirical VaR_α  from N Monte Carlo rollouts of the
+# return distribution produced by executing π starting from τ0 (usually τ0 = VaR^+).
+# ------------------------------------------------------------------------------
 function mc_var(mdp::IntMDP, πtab::Vector{Matrix{Int}}, Xgrid::Vector{Float64},
                 s0::Int, τ0::Float64, T::Int, α::Float64;
                 γ::Float64=0.9, side::Symbol=:plus, N::Int=50_000, seed::Int=2)

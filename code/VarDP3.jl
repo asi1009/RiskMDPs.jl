@@ -1,7 +1,11 @@
 module VarDP3
 
 using MDPs
+using MDPs: IntMDP, state_count, actions, getnext, load_mdp
 using CSV
+using Random
+using Statistics
+
 
 # -------------------------
 # Mesh + Approximation indices
@@ -31,7 +35,7 @@ end
 end
 
 function load_intmdp(path::AbstractString; idoutcome=nothing, docompress=false)
-    return MDPs.load_mdp(
+    return load_mdp(
         CSV.File(path);
         idoutcome = idoutcome,
         zerobased = false,
@@ -58,8 +62,8 @@ end
 #   v_t(s,τ) = inf_{π} P( ρ_t < τ | S_t=s )
 #
 # Approximation:
-#   side = :minus uses h^-(τ - r)
-#   side = :plus  uses h^+(τ - r)
+#   side = :minus uses h^-(τ - r / γ) 
+#   side = :plus  uses h^+(τ - r / γ) 
 # -------------------------------------------------------
 
 function vi(mdp::IntMDP,
@@ -113,10 +117,11 @@ function vi(mdp::IntMDP,
                     p == 0.0 && continue
 
                     r_sa = rewards[i]
-                    nτ   = τ - γ * r_sa            # <-- discounted τ-update
+                    
+                    nτ = (τ - r_sa) / γ   #  discounted τ-update
 
                     j = (side == :plus) ? hp_idx(nτ) : hm_idx(nτ)
-                    exp_val += p * V[t+2][ns, j]  # v_{t+1}(ns, projected nτ)
+                    exp_val += p * V[t+2][ns, j]  # v_{t+1}(ns, approx nτ)
                 end
 
                 if exp_val < best_val
@@ -159,3 +164,10 @@ function var(V::Vector{Matrix{Float64}},
 end
 
 end # module
+
+
+
+######
+
+
+

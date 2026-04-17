@@ -137,8 +137,8 @@ plot!(p1, τgrid, v_plus, label="DP v⁺ (h⁺)", lw=2)
 # Monte Carlo overlay: greedy policy induced by v^+
 # Evaluate the whole CDF curve (subset via stride)
 # -------------------------------------------------
-Nmc    = 200  # 300,  500  episodes per τ point
-stride = 4000  #3000, 2000     # evaluate every stride-th τ point (speed vs resolution)
+Nmc    = 500  # 300,  500  episodes per τ point
+stride = 2000  #3000, 2000     # evaluate every stride-th τ point (speed vs resolution)
 seed   = 123
 
 τ_mc, v_mc_plus = mc_value_curve(mdp, π_plus, Xgrid, s0, T;
